@@ -9,7 +9,16 @@
             </h3>
 
             <div class="w-64 mx-auto">
-                <Autocomplete />
+                {{ city }}
+                <Autocomplete
+                    v-model="city"
+                    :options="cities"
+                    label-key="label"
+                    value-key="id"
+                    placeholder="Search cities"
+                    @shouldSearch="searchCities"
+                    @select="onSelect"
+                />
             </div>
         </div>
     </div>
@@ -20,9 +29,11 @@
 
     export default {
         name: 'App',
+
         components: {
             Autocomplete,
         },
+
         data() {
             return {
                 city: '',
