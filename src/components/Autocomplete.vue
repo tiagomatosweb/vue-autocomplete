@@ -1,6 +1,5 @@
 <template>
     <div class="relative">
-        {{ arrowCounter }}
         <div class="relative rounded-md">
             <div class="absolute flex items-center inset-y-0 left-0 pl-3 text-gray-400">
                 <div style="width: 14px;">
@@ -26,13 +25,17 @@
 
             <input
                 type="text"
+                ref="input"
                 :value="keyword"
-                @input="onInput($event.target.value)"
                 :class="inputClassList"
+                :placeholder="placeholder"
+                @input="onInput($event.target.value)"
+                @blur="onBlur"
                 @keydown="onKeydown"
             >
 
             <button
+                v-if="keyword"
                 type="button"
                 class="absolute right-0 top-0 inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 focus:outline-none hover:text-gray-400"
                 @click="onClear()"
@@ -61,9 +64,12 @@
                 <li
                     v-for="(opt, index) in mutableOptions"
                     :key="opt[valueKey]"
+                    :ref="`option_${index}`"
                     class="autocomplete-item block px-4 py-2 text-sm leading-5 text-gray-700 cursor-pointer"
                     :class="{ 'bg-gray-200': arrowCounter === index }"
-                    @click="onSelect(opt)"
+                    tabindex="0"
+                    @click="onSelect()"
+                    @mouseover="setArrowCounter(index)"
                 >
                     <span
                         class="font-normal"
@@ -81,6 +87,11 @@
 
         props: {
             value: {
+                type: String,
+                default: '',
+            },
+
+            placeholder: {
                 type: String,
                 default: '',
             },
@@ -215,26 +226,68 @@
                         evt.preventDefault();
                         this.onArrowUp();
                         break;
+                    case 'Enter':
+                        this.onSelect();
+                        break;
+                    case 'Escape':
+                        this.onEsc();
+                        break;
                 }
+            },
+
+            onEsc() {
+                this.$refs.input.blur();
+                this.resetArrowCounter();
+                this.resetOptions();
             },
 
             onArrowDown() {
                 if (this.arrowCounter < this.mutableOptions.length - 1) {
                     this.arrowCounter += 1;
                 }
+
+                this.fixScrolling();
             },
 
             onArrowUp() {
                 if (this.arrowCounter > 0) {
                     this.arrowCounter -= 1;
                 }
+
+                this.fixScrolling();
             },
 
-            onSelect(opt) {
-                this.$emit('select', opt);
-                this.keyword = opt[this.labelKey];
-                this.emitInput();
+            onBlur(evt) {
+                const tgt = evt.relatedTarget;
+                if (tgt && tgt.classList.contains('autocomplete-item')) { return; }
+
                 this.resetOptions();
+                this.resetArrowCounter();
+            },
+
+            setArrowCounter(number) {
+                this.arrowCounter = number;
+            },
+
+            fixScrolling() {
+                this.$refs[`option_${this.arrowCounter}`][0].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            },
+
+            resetArrowCounter() {
+                this.arrowCounter = 0;
+            },
+
+            onSelect() {
+                const selected = this.mutableOptions[this.arrowCounter];
+                const selectedOption = this.options.find(o => o[this.valueKey] === selected[this.valueKey]);
+
+                if (selectedOption) {
+                    this.$emit('select', selectedOption);
+                    this.keyword = selectedOption[this.labelKey];
+                    this.emitInput();
+                    this.resetOptions();
+                    this.resetArrowCounter();
+                }
             },
 
             emitInput() {
