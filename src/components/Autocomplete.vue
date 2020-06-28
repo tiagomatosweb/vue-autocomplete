@@ -51,13 +51,13 @@
         </div>
 
         <div
-            v-show="options.length"
+            v-show="mutableOptions.length"
             class="absolute right-0 mt-2 w-full rounded-md shadow-lg z-50 overflow-y-scroll"
             style="max-height: 200px;"
         >
             <ul class="py-1 rounded-md bg-white shadow-xs">
                 <li
-                    v-for="opt in options"
+                    v-for="opt in mutableOptions"
                     :key="opt[valueKey]"
                     class="autocomplete-item block px-4 py-2 text-sm leading-5 text-gray-700 cursor-pointer"
                     @click="onSelect(opt)"
@@ -93,11 +93,18 @@
                 type: String,
                 default: 'id',
             },
+
+            searchMinLength: {
+                type: Number,
+                default: 3,
+            },
         },
 
         data() {
             return {
                 keyword: '',
+                originalOptions: [],
+                mutableOptions: [],
             };
         },
 
@@ -133,23 +140,56 @@
             value(value) {
                 this.keyword = value;
             },
+
+            options() {
+                this.cloneOptions();
+            },
         },
 
         created() {
             this.keyword = this.value;
+
+            if (this.options.length) {
+                this.cloneOptions();
+            }
         },
 
         methods: {
             onInput(vl) {
                 this.keyword = vl;
                 this.emitInput();
-                this.$emit('shouldSearch', vl);
+
+                if (vl.length >= this.searchMinLength) {
+                    if (!this.originalOptions.length) {
+                        this.$emit('shouldSearch', vl);
+                    } else {
+                        this.searchInternally();
+                    }
+                } else {
+                    this.resetOptions();
+                }
+            },
+
+            searchInternally() {
+                const search = this.keyword;
+                this.mutableOptions = this.originalOptions.filter(o => o[this.labelKey].toLowerCase().search(search.toLowerCase()) >= 0);
+            },
+
+            cloneOptions() {
+                this.originalOptions = JSON.parse(JSON.stringify(this.options));
+                this.mutableOptions = JSON.parse(JSON.stringify(this.options));
+            },
+
+            resetOptions() {
+                this.originalOptions = [];
+                this.mutableOptions = [];
             },
 
             onSelect(opt) {
                 this.$emit('select', opt);
                 this.keyword = opt[this.labelKey];
                 this.emitInput();
+                this.resetOptions();
             },
 
             emitInput() {
@@ -164,6 +204,7 @@
             onClear() {
                 this.$emit('select', null);
                 this.resetKeyword();
+                this.resetOptions();
             },
         },
     };

@@ -9,7 +9,6 @@
             </h3>
 
             <div class="w-64 mx-auto">
-                {{ city }}
                 <Autocomplete
                     v-model="city"
                     :options="cities"
