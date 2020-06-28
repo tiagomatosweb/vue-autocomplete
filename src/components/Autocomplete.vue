@@ -1,5 +1,6 @@
 <template>
     <div class="relative">
+        {{ arrowCounter }}
         <div class="relative rounded-md">
             <div class="absolute flex items-center inset-y-0 left-0 pl-3 text-gray-400">
                 <div style="width: 14px;">
@@ -28,6 +29,7 @@
                 :value="keyword"
                 @input="onInput($event.target.value)"
                 :class="inputClassList"
+                @keydown="onKeydown"
             >
 
             <button
@@ -57,9 +59,10 @@
         >
             <ul class="py-1 rounded-md bg-white shadow-xs">
                 <li
-                    v-for="opt in mutableOptions"
+                    v-for="(opt, index) in mutableOptions"
                     :key="opt[valueKey]"
                     class="autocomplete-item block px-4 py-2 text-sm leading-5 text-gray-700 cursor-pointer"
+                    :class="{ 'bg-gray-200': arrowCounter === index }"
                     @click="onSelect(opt)"
                 >
                     <span
@@ -106,6 +109,7 @@
         data() {
             return {
                 keyword: '',
+                arrowCounter: 0,
                 originalOptions: [],
                 mutableOptions: [],
             };
@@ -197,6 +201,33 @@
             resetOptions() {
                 this.originalOptions = [];
                 this.mutableOptions = [];
+            },
+
+            onKeydown(evt) {
+                if (!this.mutableOptions.length) { return; }
+
+                switch (evt.code) {
+                    case 'ArrowDown':
+                        evt.preventDefault();
+                        this.onArrowDown();
+                        break;
+                    case 'ArrowUp':
+                        evt.preventDefault();
+                        this.onArrowUp();
+                        break;
+                }
+            },
+
+            onArrowDown() {
+                if (this.arrowCounter < this.mutableOptions.length - 1) {
+                    this.arrowCounter += 1;
+                }
+            },
+
+            onArrowUp() {
+                if (this.arrowCounter > 0) {
+                    this.arrowCounter -= 1;
+                }
             },
 
             onSelect(opt) {
