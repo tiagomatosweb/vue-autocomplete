@@ -62,7 +62,10 @@
                     class="autocomplete-item block px-4 py-2 text-sm leading-5 text-gray-700 cursor-pointer"
                     @click="onSelect(opt)"
                 >
-                    {{ opt[labelKey] }}
+                    <span
+                        class="font-normal"
+                        v-html="opt[`${labelKey}_highlighted`] || opt[labelKey]"
+                    />
                 </li>
             </ul>
         </div>
@@ -173,11 +176,22 @@
             searchInternally() {
                 const search = this.keyword;
                 this.mutableOptions = this.originalOptions.filter(o => o[this.labelKey].toLowerCase().search(search.toLowerCase()) >= 0);
+                this.highlightOptions();
+            },
+
+            highlightOptions() {
+                const search = this.keyword;
+                const query = new RegExp(search, 'i');
+
+                this.mutableOptions.forEach((o) => {
+                    this.$set(o, `${this.labelKey}_highlighted`, o[this.labelKey].replace(query, '<span class="font-bold">$&</span>'));
+                });
             },
 
             cloneOptions() {
                 this.originalOptions = JSON.parse(JSON.stringify(this.options));
                 this.mutableOptions = JSON.parse(JSON.stringify(this.options));
+                this.searchInternally();
             },
 
             resetOptions() {
