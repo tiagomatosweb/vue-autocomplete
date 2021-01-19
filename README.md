@@ -1,4 +1,6 @@
-# Componente cidade/estado 
+# Componente autocomplete
+Componente criado durante aulas no meu canal do youtube.
+Segue o link da playlist https://youtube.com/playlist?list=PLcoYAcR89n-pKB1zVR1izEd4LsMUFB1o-
 
 ## Project setup
 ```
